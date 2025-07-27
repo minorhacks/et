@@ -1,0 +1,9 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "examplefs",
+    srcs = ["fs.go"],
+    importpath = "github.com/minorhacks/et/sample/examplefs",
+    visibility = ["//visibility:public"],
+    deps = ["//:et"],
+)

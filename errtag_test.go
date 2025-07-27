@@ -13,11 +13,11 @@ type porridgeErrs struct {
 }
 
 type errTooCold struct {
-	Inside[porridgeErrs]
+	Member[porridgeErrs]
 }
 
 type errTooHot struct {
-	Inside[porridgeErrs]
+	Member[porridgeErrs]
 }
 
 type chairErrs struct {
@@ -25,11 +25,11 @@ type chairErrs struct {
 }
 
 type errTooBig struct {
-	Inside[chairErrs]
+	Member[chairErrs]
 }
 
 type errTooSmall struct {
-	Inside[chairErrs]
+	Member[chairErrs]
 }
 
 type bedErrs struct {
@@ -37,11 +37,11 @@ type bedErrs struct {
 }
 
 type errTooHard struct {
-	Inside[bedErrs]
+	Member[bedErrs]
 }
 
 type errTooSoft struct {
-	Inside[bedErrs]
+	Member[bedErrs]
 }
 
 func TestErrtag(t *testing.T) {
@@ -69,4 +69,3 @@ func TestErrtag(t *testing.T) {
 	assert.ErrorAs(t, papaBearIssues, &porridgeErr)
 	assert.ErrorIs(t, porridgeErr, OfType[errTooHot]())
 }
-

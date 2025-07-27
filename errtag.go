@@ -13,7 +13,7 @@ import (
 // interface.
 type private struct{}
 
-var reExtractNamespace = regexp.MustCompile(`^et\.Inside\[.+\.(.+)\]$`)
+var reExtractNamespace = regexp.MustCompile(`^et\.Member\[.+\.(.+)\]$`)
 
 // Namespace is a type that, when embedded into another type, denotes a custom
 // error tag namespace.
@@ -35,12 +35,12 @@ type Tagged interface {
 	Tag() string
 }
 
-// isTagged is an interface/constraint that only Inside[N] and types that embed
-// Inside[N] implement.
+// isTagged is an interface/constraint that only Member[N] and types that embed
+// Member[N] implement.
 type isTagged interface {
 	error
 	Tagged
-	embedsInside(private)
+	embedsMember(private)
 	setNamespace(string)
 	setName(string)
 	getNamespace() string
@@ -48,49 +48,49 @@ type isTagged interface {
 	setError(error)
 }
 
-// Inside[N] is a type that, when embedded into another type, denotes a custom
+// Member[N] is a type that, when embedded into another type, denotes a custom
 // error tag within namespace N.
-type Inside[N isNamespace] struct {
+type Member[N isNamespace] struct {
 	namespace string
 	name      string
 	inner     error
 }
 
-// embedsInside implements isTagged for Inside[N].
-func (e *Inside[N]) embedsInside(_ private) {}
+// embedsMember implements isTagged for Member[N].
+func (e *Member[N]) embedsMember(_ private) {}
 
-func (e *Inside[N]) setNamespace(ns string) {
+func (e *Member[N]) setNamespace(ns string) {
 	e.namespace = ns
 }
 
-func (e *Inside[N]) setName(name string) {
+func (e *Member[N]) setName(name string) {
 	e.name = name
 }
 
-func (e *Inside[N]) setError(err error) {
+func (e *Member[N]) setError(err error) {
 	e.inner = err
 }
 
-func (e *Inside[N]) getNamespace() string {
+func (e *Member[N]) getNamespace() string {
 	return e.namespace
 }
 
-func (e *Inside[N]) getName() string {
+func (e *Member[N]) getName() string {
 	return e.name
 }
 
-func (e *Inside[N]) Error() string {
+func (e *Member[N]) Error() string {
 	return fmt.Sprintf("%s::%s: %v", e.namespace, e.name, e.inner)
 }
 
-// As will fill a supplied *Inside[N] value if it is found in the error chain of
+// As will fill a supplied *Member[N] value if it is found in the error chain of
 // e.
 //
-// *Inside[N] values supplied to `errors.As()` can be constructed with
+// *Member[N] values supplied to `errors.As()` can be constructed with
 // AsKind[N]().
-func (e *Inside[N]) As(target any) bool {
+func (e *Member[N]) As(target any) bool {
 	if reflect.TypeOf(target).Elem() == reflect.TypeOf(e) {
-		targetPtr := target.(**Inside[N])
+		targetPtr := target.(**Member[N])
 		*targetPtr = e
 		return true
 	}
@@ -104,7 +104,7 @@ func (e *Inside[N]) As(target any) bool {
 //   - comparator returned by OfType[E] has an error tag E matching the namespace
 //     and tag of this error
 //   - error matches namespace, tag, and underlying error of this error
-func (e *Inside[N]) Is(target error) bool {
+func (e *Member[N]) Is(target error) bool {
 	// Check for a matching namespace-only comparison
 	if namespace, ok := target.(*namespaceCompare); ok {
 		if e.namespace == namespace.name {
@@ -122,16 +122,20 @@ func (e *Inside[N]) Is(target error) bool {
 	return errors.Is(e.inner, target)
 }
 
+func (e *Member[N]) Unwrap() error {
+	return e.inner
+}
+
 // Tag returns the fully-qualified tag string for this error.
-func (e *Inside[N]) Tag() string {
+func (e *Member[N]) Tag() string {
 	return fmt.Sprintf("%s::%s", e.namespace, e.name)
 }
 
 // insideValueFromError will introspect an error value for a struct containing
-// an embedded Inside[N] field, and return said value if it can successfully
+// an embedded Member[N] field, and return said value if it can successfully
 // find and cast it. Otherwise, it returns nil (for both a missing field and a
 // failed cast).
-func insideValueFromError[N isNamespace](err error) *Inside[N] {
+func insideValueFromError[N isNamespace](err error) *Member[N] {
 	if err == nil {
 		return nil
 	}
@@ -145,8 +149,8 @@ func insideValueFromError[N isNamespace](err error) *Inside[N] {
 	}
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Type().Field(i)
-		if field.Anonymous && strings.HasPrefix(field.Type.Name(), "Inside[") {
-			insideVal, ok := v.Field(i).Interface().(Inside[N])
+		if field.Anonymous && strings.HasPrefix(field.Type.Name(), "Member[") {
+			insideVal, ok := v.Field(i).Interface().(Member[N])
 			if ok {
 				return &insideVal
 			}
@@ -243,6 +247,6 @@ func (n *namespaceCompare) Error() string {
 // AsKind[N] returns an object that errors can be unpacked into using
 // `errors.As`; this will match the first error in the chain tagged with any tag
 // in namespace N.
-func AsKind[N isNamespace]() *Inside[N] {
-	return &Inside[N]{}
+func AsKind[N isNamespace]() *Member[N] {
+	return &Member[N]{}
 }

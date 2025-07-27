@@ -1,0 +1,12 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "exampleapi",
+    srcs = ["api.go"],
+    importpath = "github.com/minorhacks/et/sample/exampleapi",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:et",
+        "//sample/examplefs",
+    ],
+)

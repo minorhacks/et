@@ -1,0 +1,19 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "sample_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/minorhacks/et/sample",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//:et",
+        "//sample/exampleapi",
+        "//sample/examplefs",
+    ],
+)
+
+go_binary(
+    name = "sample",
+    embed = [":sample_lib"],
+    visibility = ["//visibility:public"],
+)
