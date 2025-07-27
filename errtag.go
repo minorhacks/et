@@ -13,7 +13,7 @@ import (
 // interface.
 type private struct{}
 
-var reExtractNamespace = regexp.MustCompile(`^errtag\.Inside\[.+\.(.+)\]$`)
+var reExtractNamespace = regexp.MustCompile(`^et\.Inside\[.+\.(.+)\]$`)
 
 // Namespace is a type that, when embedded into another type, denotes a custom
 // error tag namespace.
@@ -246,5 +246,3 @@ func (n *namespaceCompare) Error() string {
 func AsKind[N isNamespace]() *Inside[N] {
 	return &Inside[N]{}
 }
-
-

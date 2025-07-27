@@ -1,0 +1,18 @@
+load("@gazelle//:def.bzl", "gazelle")
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+gazelle(name = "gazelle")
+
+go_library(
+    name = "et",
+    srcs = ["errtag.go"],
+    importpath = "github.com/minorhacks/et",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "et_test",
+    srcs = ["errtag_test.go"],
+    embed = [":et"],
+    deps = ["@com_github_stretchr_testify//assert"],
+)
